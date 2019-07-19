@@ -1,0 +1,18 @@
+[package]
+name = "tizol"
+version = "0.1.0"
+authors = ["Adam Harries <adam.harries@codeplay.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "tizol"
+path = "src/lib.rs"
+
+[[bin]]
+name = "dumpspect"
+path = "src/bin.rs"
+
+[dependencies]
+stft = { git = "https://github.com/snd/stft.git" }
