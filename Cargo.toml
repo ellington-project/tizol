@@ -16,3 +16,8 @@ path = "src/bin.rs"
 
 [dependencies]
 stft = { git = "https://github.com/snd/stft.git" }
+image = "0.22.0"
+hodges = {git = "https://github.com/ellington-project/hodges"}
+scarlet = "1.0.0"
+# itertools = "0.8.0"
+# itertools-num = "0.1.3"
