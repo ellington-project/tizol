@@ -4,7 +4,7 @@ extern crate stft;
 use stft::{WindowType, STFT};
 
 extern crate image;
-use image::{GenericImageView, ImageBuffer, RgbImage};
+use image::{ImageBuffer, RgbImage};
 
 extern crate hodges;
 use hodges::*;
@@ -13,7 +13,7 @@ extern crate scarlet;
 use crate::scarlet::colormap::ColorMap;
 
 fn main() {
-    let audio_f = "/home/adam/Music/One O'Clock Jump - Metronome All Star Band.mp3";
+    let audio_f = "One O'Clock Jump - Metronome All Star Band.mp3";
 
     let state: State<f32> = State::from_file(audio_f).expect("Failed to open file with libhodges");
 
@@ -76,7 +76,7 @@ fn main() {
     );
 
     // normalise the vector
-    let (min, max): (f64, f64) = raw_spectrogram_data.iter().map(|v| v.abs()).fold(
+    let (min, max): (f64, f64) = raw_spectrogram_data.iter().map(|v| v .abs() ).fold(
         (std::f64::MAX, std::f64::MIN),
         |(mi, ma), x| {
             let new_mi = if x < mi { x } else { mi };
@@ -86,6 +86,8 @@ fn main() {
     );
 
     let range = max - min;
+
+    println!("Range {} min {} max {}", range, min, max); 
     let normalized: Vec<f64> = raw_spectrogram_data
         .iter()
         .map(|v| (v.abs() - min) / range)

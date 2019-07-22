@@ -16,7 +16,7 @@ lowf = 64
 highf = 320
 
 # fix the sample rate, otherwise we'll never be able to see if caches are correct...
-(y, sr) = librosa.load(filename, sr=samplerate, res_type='kaiser_fast')
+(y, sr) = librosa.load(filename, sr=samplerate, res_type='kaiser_best')
 
 S = librosa.stft(y)
 M = librosa.core.magphase(S)[0]
@@ -26,6 +26,7 @@ spect = librosa.amplitude_to_db(M, ref=np.max)[lowf:highf, :]
 print("Audio of shape: " + str(y.shape))
 print("Sample rate: " + str(sr))
 print("Audio of time: " + str(y.shape[0] / sr))
+print("Spect shape: " + str(spect.shape))
 
 (h, w) = spect.shape
 fig = plt.figure(figsize=(w / 100, h / 100))
