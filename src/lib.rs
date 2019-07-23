@@ -54,6 +54,34 @@ pub fn power_to_db(S: &mut [f64], ref_value: f64, amin: f64, top_db: f64) -> () 
     }
 }
 
+pub mod util {
+    use std::fs;
+    use std::path::Path;
+    pub fn dump_samples(samples: &Vec<f64>) -> String {
+        samples
+            .iter()
+            .map(|f| f.to_string())
+            .collect::<Vec<String>>()
+            .join(",")
+    }
+
+    pub fn parse_samples(samples: String) -> Vec<f64> {
+        samples
+            .split(",")
+            .map(|f| f.parse::<f64>())
+            .collect::<Result<Vec<f64>, std::num::ParseFloatError>>()
+            .expect("Encountered an error while parsing floating point samples")
+    }
+
+    pub fn read_sample_file<P: AsRef<Path>>(filename: P) -> Vec<f64> {
+        parse_samples(fs::read_to_string(filename).expect("Failed to read string from file"))
+    }
+
+    pub fn write_sample_file<P: AsRef<Path>>(filename: P, samples: &Vec<f64>) -> () {
+        fs::write(filename, dump_samples(samples)).expect("Unwable to write samples to a file");
+    }
+}
+
 // default: sr=22050, n_fft=2048
 // pub fn fft_frequencies(sr: u32, n_fft: u32) -> Linspace<f64> {
 //     linspace::<f64>(0.0, sr as f64 / 2.0, (1 + n_fft / 2) as usize)

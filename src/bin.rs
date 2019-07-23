@@ -4,7 +4,7 @@ extern crate stft;
 use stft::{WindowType, STFT};
 
 extern crate image;
-use image::{GenericImageView, ImageBuffer, RgbImage};
+use image::{ImageBuffer, RgbImage};
 
 extern crate hodges;
 use hodges::*;
@@ -12,15 +12,22 @@ use hodges::*;
 extern crate scarlet;
 use crate::scarlet::colormap::ColorMap;
 
+use std::time::{Duration, Instant};
+
 fn main() {
-    let audio_f = "/home/adam/Music/One O'Clock Jump - Metronome All Star Band.mp3";
+    let start = Instant::now();
+    println!("==== Time: {:?}", start.elapsed());
+    println!("Reading file");
+
+    let audio_f = "/home/adam/personal/tizol/One O'Clock Jump - Metronome All Star Band.mp3";
 
     let state: State<f32> = State::from_file(audio_f).expect("Failed to open file with libhodges");
 
     let audio_samples: Vec<f64> = state.map(|f| f as f64).collect();
 
+    // Dump the audio samples
 
-
+    println!("==== Time: {:?}", start.elapsed());
     println!("Collected samples!");
     println!("Found {} samples", audio_samples.len());
 
@@ -36,36 +43,28 @@ fn main() {
     let mut raw_spectrogram_data: Vec<f64> =
         Vec::with_capacity(stft.output_size() * audio_samples.len() / window_size);
 
+    let low_freq = 0;
+    let hi_freq = 1024;
+
     // iterate over all the samples in chunks of 3000 samples.
     // in a real program you would probably read from something instead.
-    for some_samples in (&audio_samples[..]).chunks(3000) {
+    for some_samples in (&audio_samples[..]).chunks(4096) {
         // append the samples to the internal ringbuffer of the stft
         stft.append_samples(some_samples);
 
         // as long as there remain window_size samples in the internal
         // ringbuffer of the stft
         while stft.contains_enough_to_compute() {
-            // compute one column of the stft by
-            // taking the first window_size samples of the internal ringbuffer,
-            // multiplying them with the window,
-            // computing the fast fourier transform,
-            // taking half of the symetric complex outputs,
-            // computing the norm of the complex outputs and
-            // taking the log10
             stft.compute_magnitude_column(&mut spectrogram_column[..]);
-
-            // here's where you would do something with the
-
-            tizol::amplitude_to_db(&mut spectrogram_column[..]);
-
-            raw_spectrogram_data.extend(&spectrogram_column[64..320]);
-
-            // drop step_size samples from the internal ringbuffer of the stft
-            // making a step of size step_size
+            raw_spectrogram_data.extend(&spectrogram_column[low_freq..hi_freq]);
             stft.move_to_next_column();
         }
     }
 
+    // let raw_spectrogram_data : Vec<f64> = tizol::util::read_sample_file("python_samples.txt");
+
+    tizol::amplitude_to_db(&mut raw_spectrogram_data[..]);
+    println!("==== Time: {:?}", start.elapsed());
     println!(
         "{} elements in raw_spectrogram_data",
         raw_spectrogram_data.len()
@@ -88,25 +87,33 @@ fn main() {
     let range = max - min;
     let normalized: Vec<f64> = raw_spectrogram_data
         .iter()
-        .map(|v| (v.abs() - min) / range)
+        .map(|v| 1.0 - ((v.abs() - min) / range))
         .collect();
 
-    let image_height: usize = 320 - 64; //stft.output_size() as usize;
+    println!("==== Time: {:?}", start.elapsed());
+    println!("Normalized spectrogram data");
+
+    let image_height: usize = hi_freq - low_freq; //stft.output_size() as usize;
     let image_width: usize = 1 + (raw_spectrogram_data.len() / image_height);
 
     let mut img: RgbImage = ImageBuffer::new(image_width as u32, image_height as u32);
 
     let colourmap = scarlet::colormap::ListedColorMap::magma();
-    let normalizer = scarlet::colormap::NormalizeMapping::Cbrt;
 
-    for (c, column) in normalized[..].chunks(image_height).enumerate() {
-        for (r, spect_dat) in column.iter().enumerate() {
-            let norm_dat = normalizer.normalize(*spect_dat);
-            let colour: scarlet::color::RGBColor = colourmap.transform_single(1.0 - norm_dat);
+    let calculated_colours : Vec<scarlet::color::RGBColor>  = colourmap.transform(normalized);
+
+    println!("==== Time: {:?}", start.elapsed());
+    println!("Calculated colours");
+
+    for (c, column) in calculated_colours[..].chunks(image_height).enumerate() {
+        for (r, colour) in column.iter().enumerate() {
+            // let colour: scarlet::color::RGBColor = colourmap.transform_single(1.0 - spect_dat);
             let p = image::Rgb([colour.int_r(), colour.int_g(), colour.int_b()]);
             img.put_pixel(c as u32, image_height as u32 - r as u32 - 1, p);
         }
     }
 
     img.save("test.png").unwrap();
+    println!("==== Time: {:?}", start.elapsed());
+    println!("Finished.");
 }
