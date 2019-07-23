@@ -20,8 +20,6 @@ highf = 1024  # 320
 
 print("Loaded samples")
 
-print("Dumped samples")
-
 S = librosa.stft(y)
 M = librosa.core.magphase(S)[0]
 # Compute amplitude to db, and cut off the high/low frequencies
@@ -46,11 +44,3 @@ librosa.display.specshow(spect, y_axis='linear', sr=samplerate)
 # Save the figure, and close it
 fig.savefig(output, dpi=100, bbox_inches='tight', pad_inches=0.0)
 plt.close(fig)
-
-# reshape, and then save the data
-# spect_cm = spect.reshape(w, h, order='F')
-spect_cm = spect.transpose()
-
-# sample_str = ",".join(map(lambda l: ",".join(map(str, l)), spect_cm.tolist()))
-# with open("python_samples.txt", "w") as f:
-#     f.writelines(sample_str)

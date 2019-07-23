@@ -19,7 +19,7 @@ fn main() {
     println!("==== Time: {:?}", start.elapsed());
     println!("Reading file");
 
-    let audio_f = "/home/adam/personal/tizol/One O'Clock Jump - Metronome All Star Band.mp3";
+    let audio_f = "One O'Clock Jump - Metronome All Star Band.mp3";
 
     let state: State<f32> = State::from_file(audio_f).expect("Failed to open file with libhodges");
 
@@ -75,7 +75,7 @@ fn main() {
     );
 
     // normalise the vector
-    let (min, max): (f64, f64) = raw_spectrogram_data.iter().map(|v| v.abs()).fold(
+    let (min, max): (f64, f64) = raw_spectrogram_data.iter().map(|v| v .abs() ).fold(
         (std::f64::MAX, std::f64::MIN),
         |(mi, ma), x| {
             let new_mi = if x < mi { x } else { mi };
@@ -85,6 +85,8 @@ fn main() {
     );
 
     let range = max - min;
+
+    println!("Range {} min {} max {}", range, min, max);
     let normalized: Vec<f64> = raw_spectrogram_data
         .iter()
         .map(|v| 1.0 - ((v.abs() - min) / range))
