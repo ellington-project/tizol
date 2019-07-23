@@ -10,13 +10,9 @@ use hodges::*;
 extern crate scarlet;
 use crate::scarlet::colormap::ColorMap;
 
-use std::time::Instant;
-
 use rayon::prelude::*;
 
-use std::fs;
-
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub struct Spectrogram {
     pub data: Vec<f64>,
@@ -64,14 +60,14 @@ impl Spectrogram {
         let hi_freq = 1024;
 
         // Perform the STFT across the samples
-        for samples in (&audio_samples[..]).chunks(4096) {
+        (&audio_samples[..]).chunks(4096).for_each(|samples| {
             stft.append_samples(samples);
             while stft.contains_enough_to_compute() {
                 stft.compute_magnitude_column(&mut spectrogram_column[..]);
                 spectrogram_output.extend(&spectrogram_column[low_freq..hi_freq]);
                 stft.move_to_next_column();
             }
-        }
+        });
 
         // Compute the amplitude_to_db of the result.
         Self::amplitude_to_db(&mut spectrogram_output[..]);
@@ -81,7 +77,7 @@ impl Spectrogram {
 
         // Finally, calculate the height/width of the data.
         let height = hi_freq - low_freq;
-        let width = (spectrogram_output.len() / height); // Guaranteed to be divisible
+        let width = spectrogram_output.len() / height; // Guaranteed to be divisible
 
         Some(Spectrogram {
             data: spectrogram_output,
@@ -102,9 +98,9 @@ impl Spectrogram {
                 });
 
         let range = max - min;
-        for v in buffer.iter_mut() {
-            *v = 1.0 - ((v.abs() - min) / range);
-        }
+        buffer
+            .iter_mut()
+            .for_each(|v| *v = 1.0 - ((v.abs() - min) / range));
     }
 
     fn amplitude_to_db(s: &mut [f64]) -> () {
@@ -117,12 +113,12 @@ impl Spectrogram {
                 .fold(std::f64::MIN, |m, x| if x > m { x } else { m });
 
         // Don't forget to elementwise square S first!
-        for v in s.iter_mut() {
+        s.iter_mut().for_each(|v| {
             // Calculate magnitude
             *v = v.abs();
             // Calculate power
             *v = *v * *v;
-        }
+        });
         Self::power_to_db(s, ref_value.powf(2.0), amin.powf(2.0), top_db);
     }
 
@@ -136,20 +132,18 @@ impl Spectrogram {
 
         let ref_value = ref_value.abs();
 
-        for v in s.iter_mut() {
+        s.iter_mut().for_each(|v| {
             // Calculate log_spec
             *v = 10.0 * amin.max(*v).log10();
             *v -= 10.0 * amin.max(ref_value).log10();
-        }
+        });
 
         let max: f64 = s
             .iter()
             .fold(std::f64::MIN, |m, x| if *x > m { *x } else { m });
 
         // Second loop after we have the max
-        for v in s.iter_mut() {
-            *v = v.max(max - top_db);
-        }
+        s.iter_mut().for_each(|v| *v = v.max(max - top_db));
     }
 
     pub fn as_image(&self) -> RgbImage {

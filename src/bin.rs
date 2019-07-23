@@ -1,12 +1,16 @@
 extern crate tizol;
 use tizol::Spectrogram;
 
-
 use std::time::Instant;
 
-
+use std::env;
 
 fn main() {
+
+    let args: Vec<String> = env::args().collect();
+    let in_f = args[1].clone();
+    let out_f = args[2].clone();
+
     let start = Instant::now();
 
     let log_time = |message: &'static str| -> () {
@@ -15,9 +19,7 @@ fn main() {
 
     log_time("Read file");
 
-    let audio_f = "One O'Clock Jump - Metronome All Star Band.mp3";
-
-    let sp = Spectrogram::from_file(audio_f).unwrap();
+    let sp = Spectrogram::from_file(in_f).unwrap();
 
     log_time("Computed spectrogram");
 
@@ -25,7 +27,7 @@ fn main() {
 
     log_time("Image generated!");
 
-    img.save("test.png").unwrap();
+    img.save(out_f).unwrap();
 
     log_time("Finished.");
 }
