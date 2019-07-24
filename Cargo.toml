@@ -12,8 +12,8 @@ name = "tizol"
 path = "src/lib.rs"
 
 [[bin]]
-name = "dumpspect"
-path = "src/bin.rs"
+name = "spectrogram"
+path = "examples/spectrogram.rs"
 
 [dependencies]
 stft = { git = "https://github.com/snd/stft.git" }
