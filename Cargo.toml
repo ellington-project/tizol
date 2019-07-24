@@ -18,13 +18,20 @@ name = "spectrogram"
 path = "examples/spectrogram.rs"
 
 [dependencies]
-stft = { path = "stft", version="0.2.0"}
+# stft = { path = "stft", version="0.2.0"}
 image = "0.22.0"
 hodges = "1.0.0"
 scarlet = "1.0.0"
 rayon = "1.1.0"
 prost="0.5.0"
 bytes="0.4.7"
+
+# STFT deps:
+apodize = "0.3.1"
+num = "0.2.0"
+rustfft = "3.0.0"
+strider = "0.1.3"
+
 
 [build-dependencies]
 prost-build = { version = "0.5.0"}

@@ -1,3 +1,0 @@
-[submodule "stft"]
-	path = stft
-	url = https://github.com/snd/stft.git
