@@ -27,7 +27,8 @@
 //!
 //! Tizol is part of the "Ellington" project - a set of tools designed to make it easier for swing dance DJ's to automatically calculate the tempo of swing music. Each component of the project is named after a member of (or arranger for) Duke Ellington's band. Tizol is named after [Juan Tizol](https://en.wikipedia.org/wiki/Juan_Tizol), a solid rock of the trombone section, and the composer of "Caravan", one of the most famous jazz standards.
 
-extern crate stft;
+// extern crate stft;
+mod stft;
 use stft::{WindowType, STFT};
 
 extern crate image;
