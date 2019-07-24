@@ -3,8 +3,9 @@ name = "tizol"
 version = "0.1.0"
 authors = ["Adam Harries <adam.harries@codeplay.com>"]
 edition = "2018"
+build = "build.rs"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 
 [lib]
 name = "tizol"
@@ -20,3 +21,8 @@ image = "0.22.0"
 hodges = {git = "https://github.com/ellington-project/hodges"}
 scarlet = "1.0.0"
 rayon = "1.1.0"
+prost="0.5.0"
+bytes="0.4.7"
+
+[build-dependencies]
+prost-build = { version = "0.5.0"}

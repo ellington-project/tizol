@@ -1,0 +1,9 @@
+syntax = "proto3";
+package tizol;
+
+// The Spectrogram struct is Tizol's core, and only, data structure. It stores the raw spectrogram data, as well as the dimensions of the computed spectrogram. The user should only construct a spectrogram via the methods `from_file`, and `from_buffer`, but the implementation details are left public, as they should be accesible for reading.
+message Spectrogram {
+    uint32 width = 1;
+    uint32 height = 2;
+    repeated double data = 3 [packed = true];
+}

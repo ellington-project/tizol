@@ -6,6 +6,7 @@ import librosa.display
 import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 in_f = sys.argv[1]
 out_f = sys.argv[2]
