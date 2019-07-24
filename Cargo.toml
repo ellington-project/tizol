@@ -18,7 +18,7 @@ name = "spectrogram"
 path = "examples/spectrogram.rs"
 
 [dependencies]
-stft = { git = "https://github.com/snd/stft.git" }
+stft = { path = "stft" }
 image = "0.22.0"
 hodges = "1.0.0"
 scarlet = "1.0.0"
