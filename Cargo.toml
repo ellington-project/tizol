@@ -1,10 +1,12 @@
 [package]
 name = "tizol"
 version = "0.1.0"
-authors = ["Adam Harries <adam.harries@codeplay.com>"]
+authors = ["Adam Harries <harries.adam@gmail.com>"]
 edition = "2018"
 build = "build.rs"
-
+license = "GPL-3.0-or-later"
+description = "A small library for reliable, fast spectrogram generation and visualisation."
+repository = "https://github.com/AdamHarries/tizol"
 
 
 [lib]
@@ -18,7 +20,7 @@ path = "examples/spectrogram.rs"
 [dependencies]
 stft = { git = "https://github.com/snd/stft.git" }
 image = "0.22.0"
-hodges = {git = "https://github.com/ellington-project/hodges"}
+hodges = "1.0.0"
 scarlet = "1.0.0"
 rayon = "1.1.0"
 prost="0.5.0"
