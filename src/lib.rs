@@ -185,7 +185,7 @@ impl Spectrogram {
 
         let calculated_colours: Vec<scarlet::color::RGBColor> = self
             .data
-            .par_iter()
+            .iter()
             .map(|n| colourmap.transform_single(*n))
             .collect();
 
