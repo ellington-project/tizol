@@ -32,7 +32,7 @@ mod stft;
 use stft::{WindowType, STFT};
 
 extern crate image;
-use image::{ImageBuffer, RgbImage};
+use image::{ImageBuffer, RgbImage, GrayImage};
 
 extern crate hodges;
 use hodges::*;
@@ -40,7 +40,7 @@ use hodges::*;
 extern crate scarlet;
 use crate::scarlet::colormap::ColorMap;
 
-use rayon::prelude::*;
+// use rayon::prelude::*;
 
 use std::path::PathBuf;
 
@@ -178,7 +178,7 @@ impl Spectrogram {
     /// Generates an image::Result from a spectrogram.
     ///
     /// This method is significantly slower than (e.g.) `from_buffer`, as it uses the scarlet magma ListedColorMap to compute the output colour in order to maintain parity with librosa/matplotlib
-    pub fn as_image(&self) -> RgbImage {
+    pub fn as_image_col(&self) -> RgbImage {
         let mut img: RgbImage = ImageBuffer::new(self.width as u32, self.height as u32);
 
         let colourmap = scarlet::colormap::ListedColorMap::magma();
@@ -201,4 +201,29 @@ impl Spectrogram {
 
         img
     }
+
+    pub fn as_image_bw(&self) -> GrayImage {
+        let mut img: GrayImage = ImageBuffer::new(self.width as u32, self.height as u32);
+
+        self.data[..]
+            .chunks(self.height as usize)
+            .enumerate()
+            .for_each(|(c, column)| {
+                column.iter().enumerate().for_each(|(r, colour)| {
+                    let colour = ((*colour) * 256.0) as u8;
+                    let p = image::Luma([colour]);
+                    
+                    img.put_pixel(c as u32, r as u32, p);
+                })
+            });
+
+        img
+    }
+
+    pub fn as_image_bw_raw(&self) -> GrayImage { 
+        let u8dat : Vec<u8> = self.data[..].iter().map(|c| ((*c) * 256.0) as u8).collect();
+
+        ImageBuffer::from_vec(self.height as u32, self.width as u32, u8dat).unwrap()
+    }<
+
 }

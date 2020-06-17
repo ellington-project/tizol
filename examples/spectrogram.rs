@@ -10,26 +10,29 @@ use std::fs::File;
 use std::io::{Read, Write};
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let in_f = args[1].clone();
-    let out_f = args[2].clone();
+    // let args: Vec<String> = env::args().collect();
+    // let in_f = args[1].clone();
+    // let out_f = args[2].clone();
 
-    // let start = Instant::now();
+    let in_f = "ocj.mp3";
+    let out_f = "ocj.png";
 
-    // let log_time = |message: &'static str| -> () {
-    //     println!("==== Time: {: >15?} ==== {}", start.elapsed(), message);
-    // };
+    let start = Instant::now();
+
+    let log_time = |message: &'static str| -> () {
+        println!("==== Time: {: >15?} ==== {}", start.elapsed(), message);
+    };
 
     // Read an audio file into a spectrogram
     let sp = Spectrogram::from_file(in_f).unwrap();
-    // log_time("Computed spectrogram");
+    log_time("Computed spectrogram");
 
     // Save it as an image
-    let img = sp.as_image();
-    // log_time("Image generated!");
+    let img = sp.as_image_bw_raw();
+    log_time("Image generated!");
 
     img.save(out_f).unwrap();
-    // log_time("Image saved.");
+    log_time("Image saved.");
 
     // Do some protobuf stuff.
     // let mut buf = Vec::<u8>::new();

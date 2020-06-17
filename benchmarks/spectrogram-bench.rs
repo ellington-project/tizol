@@ -1,4 +1,3 @@
-#![feature(duration_float)]
 extern crate tizol;
 use tizol::Spectrogram;
 
@@ -6,14 +5,10 @@ use std::time::Instant;
 
 use std::env;
 
-use prost::Message;
-use std::fs::File;
-use std::io::{Read, Write};
-
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let in_f = args[1].clone();
-    let iterations = args[2].clone().parse::<u32>().unwrap();
+    let in_f = "ocj.mp3"; //args[1].clone();
+    let iterations = 10; //args[2].clone().parse::<u32>().unwrap();
 
     let t0 = Instant::now();
 
@@ -29,7 +24,7 @@ fn main() {
     for i in 0..iterations {
         let sp = Spectrogram::from_file(&in_f).unwrap();
 
-        let img = sp.as_image();
+        let img = sp.as_image_bw_raw();
 
         println!("Width: {}, Height: {}", img.width(), img.height());
         log_time(i);
