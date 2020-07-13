@@ -30,6 +30,7 @@
 // extern crate stft;
 pub mod stft;
 use stft::streaming::STFT as StreamingSTFT;
+use stft::inplace::STFT as InplaceSTFT;
 use stft::WindowType;
 
 extern crate image;
@@ -73,55 +74,18 @@ impl Spectrogram {
         let window_size = 2048;
         let step_size = window_size / 4;
         // Initialise the stft machinery.
-        let mut stft = StreamingSTFT::<f64>::new(
+        let stft = InplaceSTFT::<f64>::new(
             WindowType::Hanning, /*The STFT window type*/
             window_size,         /* Window size */
             step_size,           /* Step size */
         );
 
-        /* Create buffers for:
-            - The output of a single STFT column,
-            - The total output of the STFT
-        */
-        let mut spectrogram_column: Vec<f64> =
-            std::iter::repeat(0.).take(stft.output_size()).collect();
-
-        let mut spectrogram_output: Vec<f64> = Vec::with_capacity(1024);
-
-        println!("Audio sample len:        {:?}", audio_samples.len());
-        let steps_per_window = window_size / step_size;
-        println!("Step size:               {:?}", step_size);
-        println!("Steps per window:        {:?}", steps_per_window);
-        println!(
-            "Steps available:         {:?}",
-            audio_samples.len() / step_size
-        );
-        println!(
-            "Expected stft strides:   {:?}",
-            (audio_samples.len() - window_size) as f32 / step_size as f32
-        );
-        println!(
-            "Expected stft size:      {:?}",
-            ((audio_samples.len() - window_size) as f32 / step_size as f32)
-                * (stft.output_size() as f32)
-        );
-
         // Adjustable - for now, use the whole buffer.
         let low_freq = 0;
-        let hi_freq = 1024;
+        let hi_freq = stft.output_size();
 
         // Perform the STFT across the samples
-
-        (&audio_samples[..]).chunks(4096).for_each(|samples| {
-            stft.append_samples(samples);
-        });
-        while stft.contains_enough_to_compute() {
-            stft.compute_magnitude_column(&mut spectrogram_column[..]);
-            spectrogram_output.extend(&spectrogram_column[low_freq..hi_freq]);
-            stft.move_to_next_column();
-        }
-
-        println!("Spectrogram output size: {:?}", spectrogram_output.len());
+        let mut spectrogram_output = stft.par_iter_stft(audio_samples); 
 
         // Compute the amplitude_to_db of the result.
         Self::amplitude_to_db(&mut spectrogram_output[..]);

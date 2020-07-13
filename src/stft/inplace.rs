@@ -89,6 +89,7 @@ where
     pub fn compute_magnitude_column(&self, real_input: &[T]) -> Vec<T> {
         self.compute_complex_column(real_input)
             .iter()
+            .take(self.output_size())
             .map(|elem| elem.norm())
             .collect()
     }
@@ -96,11 +97,12 @@ where
     pub fn compute_column(&self, real_input: &[T]) -> Vec<T> {
         self.compute_complex_column(real_input)
             .par_iter()
+            .take(self.window_size/2)
             .map(|elem| log10_positive(elem.norm()))
             .collect()
     }
 
-    // Hardcode all this shit into a single function for now.
+    // Hardcode all this into a single function for now.
     pub fn stft(&self, data: &Vec<T>) -> Vec<T> {
         // for(
         // usize window_start_ix = 0;
@@ -112,7 +114,7 @@ where
         let mut window_start_ix = 0;
         while window_start_ix < data.len() - self.window_size {
             let window_end_ix = window_start_ix + self.window_size;
-            result_vec.extend(self.compute_column(&data[window_start_ix..window_end_ix]));
+            result_vec.extend(self.compute_magnitude_column(&data[window_start_ix..window_end_ix]));
             window_start_ix += self.step_size;
         }
         result_vec
@@ -122,7 +124,7 @@ where
         data[..]
             .windows(self.window_size)
             .step_by(self.step_size)
-            .map(|window| self.compute_column(window))
+            .map(|window| self.compute_magnitude_column(window))
             .flatten()
             .collect()
     }
@@ -131,7 +133,7 @@ where
         data[..]
             .par_windows(self.window_size)
             .step_by(self.step_size)
-            .map(|window| self.compute_column(window))
+            .map(|window| self.compute_magnitude_column(window))
             .flatten()
             .collect()
     }
