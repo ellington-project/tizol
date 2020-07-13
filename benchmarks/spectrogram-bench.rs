@@ -3,10 +3,10 @@ use tizol::Spectrogram;
 
 use std::time::Instant;
 
-use std::env;
+// use std::env;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    // let args: Vec<String> = env::args().collect();
     let in_f = "ocj.mp3"; //args[1].clone();
     let iterations = 10; //args[2].clone().parse::<u32>().unwrap();
 

@@ -1,13 +1,11 @@
 extern crate tizol;
 use tizol::Spectrogram;
 
-use std::time::Instant;
+// use std::env;
 
-use std::env;
-
-use prost::Message;
-use std::fs::File;
-use std::io::{Read, Write};
+// use prost::Message;
+// use std::fs::File;
+// use std::io::{Read, Write};
 
 fn main() {
     // let args: Vec<String> = env::args().collect();
@@ -17,22 +15,13 @@ fn main() {
     let in_f = "ocj.mp3";
     let out_f = "ocj.png";
 
-    let start = Instant::now();
-
-    let log_time = |message: &'static str| -> () {
-        println!("==== Time: {: >15?} ==== {}", start.elapsed(), message);
-    };
-
     // Read an audio file into a spectrogram
     let sp = Spectrogram::from_file(in_f).unwrap();
-    log_time("Computed spectrogram");
 
     // Save it as an image
     let img = sp.as_image_bw_raw();
-    log_time("Image generated!");
 
     img.save(out_f).unwrap();
-    log_time("Image saved.");
 
     // Do some protobuf stuff.
     // let mut buf = Vec::<u8>::new();

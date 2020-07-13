@@ -28,11 +28,12 @@
 //! Tizol is part of the "Ellington" project - a set of tools designed to make it easier for swing dance DJ's to automatically calculate the tempo of swing music. Each component of the project is named after a member of (or arranger for) Duke Ellington's band. Tizol is named after [Juan Tizol](https://en.wikipedia.org/wiki/Juan_Tizol), a solid rock of the trombone section, and the composer of "Caravan", one of the most famous jazz standards.
 
 // extern crate stft;
-mod stft;
-use stft::{WindowType, STFT};
+pub mod stft;
+use stft::streaming::STFT as StreamingSTFT;
+use stft::WindowType;
 
 extern crate image;
-use image::{ImageBuffer, RgbImage, GrayImage};
+use image::{GrayImage, ImageBuffer, RgbImage};
 
 extern crate hodges;
 use hodges::*;
@@ -40,12 +41,13 @@ use hodges::*;
 extern crate scarlet;
 use crate::scarlet::colormap::ColorMap;
 
-// use rayon::prelude::*;
+use rayon::prelude::*;
 
 use std::path::PathBuf;
 
 extern crate prost;
 
+// Include spectrogram structure from protobuf definition (built in build.rs)
 include!(concat!(env!("OUT_DIR"), "/tizol.rs"));
 
 impl Spectrogram {
@@ -68,11 +70,13 @@ impl Spectrogram {
     ///
     /// In FFMPEG terms, these are single channel f32le samples, at a sample rate of 44100hz
     pub fn from_buffer(audio_samples: &Vec<f64>) -> Self {
+        let window_size = 2048;
+        let step_size = window_size / 4;
         // Initialise the stft machinery.
-        let mut stft = STFT::<f64>::new(
+        let mut stft = StreamingSTFT::<f64>::new(
             WindowType::Hanning, /*The STFT window type*/
-            2048,                /* Window size */
-            2048 / 4,            /* Step size */
+            window_size,         /* Window size */
+            step_size,           /* Step size */
         );
 
         /* Create buffers for:
@@ -82,21 +86,42 @@ impl Spectrogram {
         let mut spectrogram_column: Vec<f64> =
             std::iter::repeat(0.).take(stft.output_size()).collect();
 
-        let mut spectrogram_output: Vec<f64> = Vec::with_capacity(audio_samples.len() * 2);
+        let mut spectrogram_output: Vec<f64> = Vec::with_capacity(1024);
+
+        println!("Audio sample len:        {:?}", audio_samples.len());
+        let steps_per_window = window_size / step_size;
+        println!("Step size:               {:?}", step_size);
+        println!("Steps per window:        {:?}", steps_per_window);
+        println!(
+            "Steps available:         {:?}",
+            audio_samples.len() / step_size
+        );
+        println!(
+            "Expected stft strides:   {:?}",
+            (audio_samples.len() - window_size) as f32 / step_size as f32
+        );
+        println!(
+            "Expected stft size:      {:?}",
+            ((audio_samples.len() - window_size) as f32 / step_size as f32)
+                * (stft.output_size() as f32)
+        );
 
         // Adjustable - for now, use the whole buffer.
         let low_freq = 0;
         let hi_freq = 1024;
 
         // Perform the STFT across the samples
+
         (&audio_samples[..]).chunks(4096).for_each(|samples| {
             stft.append_samples(samples);
-            while stft.contains_enough_to_compute() {
-                stft.compute_magnitude_column(&mut spectrogram_column[..]);
-                spectrogram_output.extend(&spectrogram_column[low_freq..hi_freq]);
-                stft.move_to_next_column();
-            }
         });
+        while stft.contains_enough_to_compute() {
+            stft.compute_magnitude_column(&mut spectrogram_column[..]);
+            spectrogram_output.extend(&spectrogram_column[low_freq..hi_freq]);
+            stft.move_to_next_column();
+        }
+
+        println!("Spectrogram output size: {:?}", spectrogram_output.len());
 
         // Compute the amplitude_to_db of the result.
         Self::amplitude_to_db(&mut spectrogram_output[..]);
@@ -144,7 +169,7 @@ impl Spectrogram {
         // Don't forget to elementwise square S first!
         s.iter_mut().for_each(|v| {
             // Calculate magnitude
-            *v = v.abs();
+            // *v = v.abs();
             // Calculate power
             *v = *v * *v;
         });
@@ -161,10 +186,13 @@ impl Spectrogram {
 
         let ref_value = ref_value.abs();
 
-        s.iter_mut().for_each(|v| {
+        // Pull this value out of the inner loop
+        let tammrf = 10.0 * amin.max(ref_value).log10();
+
+        s.par_iter_mut().for_each(|v| {
             // Calculate log_spec
-            *v = 10.0 * amin.max(*v).log10();
-            *v -= 10.0 * amin.max(ref_value).log10();
+            *v = (10.0 * amin.max(*v).log10()) - tammrf;
+            // *v -= tammrf;
         });
 
         let max: f64 = s
@@ -212,7 +240,6 @@ impl Spectrogram {
                 column.iter().enumerate().for_each(|(r, colour)| {
                     let colour = ((*colour) * 256.0) as u8;
                     let p = image::Luma([colour]);
-                    
                     img.put_pixel(c as u32, r as u32, p);
                 })
             });
@@ -220,10 +247,9 @@ impl Spectrogram {
         img
     }
 
-    pub fn as_image_bw_raw(&self) -> GrayImage { 
-        let u8dat : Vec<u8> = self.data[..].iter().map(|c| ((*c) * 256.0) as u8).collect();
+    pub fn as_image_bw_raw(&self) -> GrayImage {
+        let u8dat: Vec<u8> = self.data[..].iter().map(|c| ((*c) * 256.0) as u8).collect();
 
         ImageBuffer::from_vec(self.height as u32, self.width as u32, u8dat).unwrap()
-    }<
-
+    }
 }
