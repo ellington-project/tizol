@@ -133,7 +133,7 @@ impl Spectrogram {
         // Don't forget to elementwise square S first!
         s.iter_mut().for_each(|v| {
             // Calculate magnitude
-            // *v = v.abs();
+            // *v = v.abs(); // we can skip this because it all washes out in the power
             // Calculate power
             *v = *v * *v;
         });
